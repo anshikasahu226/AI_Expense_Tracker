@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | AI Expense Tracker</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #10172f, #171c3b 55%, #211d46);
+            color: #edf0ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 950px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            background: #191f3c;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+        }
+
+        .welcome-panel {
+            padding: 45px 40px;
+            background: linear-gradient(145deg, #29275c, #202849);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .brand {
+            color: #b7adff;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .welcome-panel h1 {
+            font-size: 36px;
+            line-height: 1.2;
+            margin: 22px 0 16px;
+        }
+
+        .welcome-panel p {
+            color: #c0c7e4;
+            line-height: 1.8;
+        }
+
+        .feature {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.06);
+            color: #dfe3ff;
+        }
+
+        .form-panel {
+            padding: 42px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-panel h2 {
+            margin: 0 0 8px;
+            font-size: 29px;
+        }
+
+        .subtitle {
+            color: #aeb7d5;
+            margin: 0 0 20px;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 7px;
+            font-size: 14px;
+            color: #dce1f7;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #394263;
+            border-radius: 10px;
+            background: #111831;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #887cff;
+            box-shadow: 0 0 0 3px rgba(136,124,255,0.15);
+        }
+
+        input::placeholder { color: #77819f; }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(100deg, #625be7, #8a68f5);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            box-shadow: 0 8px 22px rgba(109,93,245,0.3);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 9px;
+            background: rgba(31,185,129,0.12);
+            border: 1px solid rgba(31,185,129,0.3);
+            color: #8ce5bc;
+            font-size: 14px;
+        }
+
+        .switch-link {
+            margin-top: 22px;
+            text-align: center;
+            color: #aeb7d5;
+            font-size: 14px;
+        }
+
+        a {
+            color: #a99cff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover { color: #c7bdff; }
+
+        @media (max-width: 700px) {
+            .auth-container { grid-template-columns: 1fr; }
+            .welcome-panel { padding: 28px; }
+            .welcome-panel h1 { font-size: 30px; }
+            .form-panel { padding: 30px 25px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <section class="welcome-panel">
+            <div class="brand">✦ AI Expense Tracker</div>
+            <h1>Start your financial journey.</h1>
+            <p>Create your account and organize your income and expenses in one place.</p>
+            <div class="feature">✓ &nbsp; Organize your transactions</div>
+            <div class="feature">✓ &nbsp; Monitor your spending</div>
+            <div class="feature">✓ &nbsp; Make informed decisions</div>
+        </section>
+
+        <section class="form-panel">
+            <h2>Create account</h2>
+            <p class="subtitle">Fill in your details to get started.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <p class="message">{{ message }}</p>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <label for="username">Full name</label>
+                <input id="username" name="username" type="text"
+                       placeholder="Enter your name" required>
+
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email"
+                       placeholder="you@example.com" required>
+
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password"
+                       placeholder="Create a password" required>
+
+                <button type="submit">Create My Account →</button>
+            </form>
+
+            <div class="switch-link">
+                Already have an account?
+                <a href="{{ url_for('login') }}">Login</a>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

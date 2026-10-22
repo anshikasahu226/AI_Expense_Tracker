@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Budget - AI Expense Tracker</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 25px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #10172f, #171c3b 55%, #211d46);
+            color: #edf0ff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .subtitle {
+            color: #b8c0df;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #625be7;
+            color: white;
+            text-decoration: none;
+            border-radius: 9px;
+            margin-left: 6px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #202849, #191f3c);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 16px;
+            margin-bottom: 22px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #41496d;
+            border-radius: 8px;
+            background: #111832;
+            color: #edf0ff;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 18px;
+            background: #625be7;
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat p {
+            color: #b8c0df;
+        }
+
+        .stat h2 {
+            overflow-wrap: anywhere;
+        }
+
+        .income {
+            color: #42d6a0;
+        }
+
+        .expense {
+            color: #ff7887;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 20px;
+            background: #111832;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            background: #42d6a0;
+            transition: width 0.3s ease;
+        }
+
+        .warning {
+            color: #ffb86b;
+        }
+
+        .danger {
+            color: #ff7887;
+        }
+
+        .message {
+            background: #202849;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 15px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Monthly Budget</h1>
+            <p class="subtitle">Plan your spending and stay within your limit.</p>
+        </div>
+
+        <div>
+            <a class="button" href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a class="button" href="{{ url_for('reports') }}">Reports</a>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="card">
+        <h2>Set Your Budget for This Month</h2>
+
+        <form method="POST" action="{{ url_for('budget') }}">
+            <label for="budget_amount">Monthly spending limit (₹)</label>
+
+            <input
+                id="budget_amount"
+                name="budget_amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value="{{ '%.2f'|format(budget_amount) if budget_amount > 0 else '' }}"
+                placeholder="e.g. 10000"
+                required
+            >
+
+            <button type="submit">Save Monthly Budget</button>
+        </form>
+    </section>
+
+    <section class="stats">
+        <div class="card stat">
+            <p>Monthly Budget</p>
+            <h2>₹{{ "%.2f"|format(budget_amount) }}</h2>
+        </div>
+
+        <div class="card stat">
+            <p>Spent This Month</p>
+            <h2 class="expense">₹{{ "%.2f"|format(monthly_expenses) }}</h2>
+        </div>
+
+        <div class="card stat">
+            <p>Budget Remaining</p>
+            <h2 class="{{ 'income' if remaining_budget >= 0 else 'expense' }}">
+                ₹{{ "%.2f"|format(remaining_budget) }}
+            </h2>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Budget Progress</h2>
+
+        {% if budget_amount > 0 %}
+            <p>
+                You have used <strong>{{ percentage_used }}%</strong>
+                of your monthly budget.
+            </p>
+
+            <div class="progress-track">
+                <div
+                    class="progress-fill"
+                    id="progressFill"
+                    style="width: {{ [percentage_used, 100]|min }}%;
+                    background: {{ '#ff7887' if percentage_used >= 100 else '#ffb86b' if percentage_used >= 80 else '#42d6a0' }};">
+                </div>
+            </div>
+
+            {% if percentage_used >= 100 %}
+                <p class="danger">
+                    Warning: You have reached or exceeded your monthly budget.
+                </p>
+            {% elif percentage_used >= 80 %}
+                <p class="warning">
+                    Caution: You have used at least 80% of your budget.
+                </p>
+            {% else %}
+                <p class="income">
+                    Your spending is currently below 80% of your budget.
+                </p>
+            {% endif %}
+        {% else %}
+            <p>Set a monthly budget above to see your spending progress.</p>
+        {% endif %}
+    </section>
+
+</div>
+</body>
+</html>

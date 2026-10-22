@@ -1,0 +1,673 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Expense Tracker</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #10172f, #171c3b 55%, #211d46);
+            color: #edf0ff;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: rgba(13, 20, 47, 0.92);
+            color: white;
+            padding: 26px 6%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header p {
+            color: #b8c0df;
+            margin: 8px 0 0;
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .account-info p {
+            margin: 5px 0 0;
+            color: #b8c0df;
+            font-size: 13px;
+        }
+
+        .logout-btn {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #625be7;
+            color: white;
+            text-decoration: none;
+            border-radius: 9px;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #7972ff;
+        }
+
+        main {
+            max-width: 1150px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .card, .panel {
+            background: linear-gradient(145deg, #202849, #191f3c);
+            color: #edf0ff;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card:hover, .panel:hover {
+            transform: translateY(-3px);
+            border-color: rgba(145, 125, 255, 0.45);
+        }
+
+        .card p {
+            color: #b8c0df;
+            margin: 0 0 12px;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .income {
+            color: #42d6a0;
+        }
+
+        .expense {
+            color: #ff7887;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        h3 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin: 14px 0 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #41496d;
+            border-radius: 8px;
+            background: #111832;
+            color: #edf0ff;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #7770ff;
+            border-color: #7770ff;
+        }
+
+        button {
+            border: 0;
+            padding: 11px 16px;
+            background: #625be7;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #7972ff;
+        }
+
+        form button {
+            margin-top: 18px;
+        }
+
+        .add-form button {
+            width: 100%;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            background: #173d35;
+            color: #8cf0c6;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 13px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+            white-space: nowrap;
+        }
+
+        th {
+            color: #b8c0df;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .actions form {
+            margin: 0;
+        }
+
+        .actions form button {
+            margin: 0;
+        }
+
+        .delete {
+            background: #482535;
+            color: #ff9eaa;
+            padding: 8px 10px;
+        }
+
+        .delete:hover {
+            background: #673044;
+        }
+
+        .edit-btn {
+            padding: 8px 12px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #b8c0df;
+            padding: 30px;
+        }
+
+        /* Edit popup */
+        #editModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 22, 0.78);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #202849, #191f3c);
+            color: #edf0ff;
+            padding: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content input,
+        .modal-content select {
+            display: block;
+            width: 100%;
+            margin: 6px 0 12px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            margin: 0;
+        }
+
+        .cancel-btn {
+            background: #343c5b;
+        }
+
+        .cancel-btn:hover {
+            background: #485173;
+        }
+
+        @media (max-width: 800px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                align-items: flex-start;
+            }
+        }
+
+
+/* AI Spending Insights cards */
+.insights-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.insight-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.insight-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.insight-card p {
+    margin-bottom: 0;
+    line-height: 1.6;
+    color: #555555;
+}
+
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>AI Expense Tracker</h1>
+
+<!-- Dashboard Notification Center -->
+{% if notifications %}
+<div class="section" style="margin: 20px 0; padding: 20px;">
+    <h2>Notification Center</h2>
+
+    {% for notification in notifications %}
+   
+<div style="
+    padding: 16px;
+    margin: 12px 0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #222222;
+    border: 1px solid #d1d5db;
+    border-left: 6px solid {{ '#dc3545' if notification.level == 'danger' else '#e0a000' }};
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+">
+    <strong style="font-size: 16px; color: #222222;">
+        {{ notification.title }}
+    </strong>
+    <p style="margin: 8px 0 0; color: #444444; line-height: 1.6;">
+        {{ notification.message }}
+    </p>
+</div>
+
+    {% endfor %}
+</div>
+{% endif %}
+
+        <p>Understand your spending. Make smarter financial decisions.</p>
+    </div>
+
+    <div class="account-info">
+        <div>
+            <strong>Welcome, {{ current_user.username }}</strong>
+            <p>{{ current_user.email }}</p>
+        </div>
+
+       <a href="{{ url_for('reports') }}" class="logout-btn">Reports</a>
+       <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+       <a href="{{ url_for('budget') }}" class="logout-btn">Monthly Budget</a>
+<a href="{{ url_for('export_transactions') }}" class="logout-btn">Export CSV</a>
+<a href="{{ url_for('daily_limit') }}" class="logout-btn">Daily Spending Alert</a>
+
+
+
+    </div>
+</header>
+
+<main>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="message">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="cards">
+        <div class="card">
+            <p>Total Balance</p>
+            <h2>₹{{ "%.2f"|format(balance) }}</h2>
+        </div>
+
+        <div class="card">
+            <p>Total Income</p>
+            <h2 class="income">₹{{ "%.2f"|format(income) }}</h2>
+        </div>
+
+        <div class="card">
+            <p>Total Expenses</p>
+            <h2 class="expense">₹{{ "%.2f"|format(expenses) }}</h2>
+        </div>
+    </section>
+
+    <section class="layout">
+
+        <!-- Add Transaction Form -->
+        <div class="panel">
+            <h3>Add Transaction</h3>
+
+            <form class="add-form"
+                  action="{{ url_for('add_transaction') }}"
+                  method="POST">
+
+                <label for="transaction_type">Transaction Type</label>
+                <select id="transaction_type" name="transaction_type" required>
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                </select>
+
+                <label for="description">Description</label>
+                <input id="description" name="description"
+                       placeholder="e.g. Bought vegetables" required>
+
+                <label for="amount">Amount (₹)</label>
+                <input id="amount" name="amount" type="number"
+                       min="0.01" step="0.01" placeholder="500" required>
+
+                <label for="category">Category (optional)</label>
+                <input id="category" name="category"
+                       placeholder="Auto-categorized if empty">
+
+                <label for="transaction_date">Date</label>
+                <input id="transaction_date" name="transaction_date"
+                       type="date" required>
+
+                <button type="submit">Save Transaction</button>
+            </form>
+        </div>
+
+        <!-- Recent Transactions -->
+
+            <div class="panel">
+            <h3>Recent Transactions</h3>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin:15px 0;">
+    <input
+        type="text"
+        id="transactionSearch"
+        placeholder="Search transactions..."
+        style="flex:1; min-width:150px;"
+    >
+
+    <select id="typeFilter" style="flex:1; min-width:130px;">
+        <option value="all">All Types</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+    </select>
+
+    <select id="categoryFilter" style="flex:1; min-width:130px;">
+        <option value="all">All Categories</option>
+        <option value="Food">Food</option>
+        <option value="Travel">Travel</option>
+        <option value="Bills">Bills</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
+
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.description }}</td>
+                            <td>{{ transaction.category }}</td>
+                            <td>{{ transaction.transaction_date }}</td>
+                            <td>{{ transaction.transaction_type|title }}</td>
+                            <td>₹{{ "%.2f"|format(transaction.amount) }}</td>
+
+                            <td>
+                                <div class="actions">
+
+                                    <button
+                                        type="button"
+                                        class="edit-btn"
+                                        data-id="{{ transaction.id }}"
+                                        data-description="{{ transaction.description }}"
+                                        data-amount="{{ transaction.amount }}"
+                                        data-category="{{ transaction.category }}"
+                                        data-date="{{ transaction.transaction_date }}"
+                                        data-type="{{ transaction.transaction_type }}">
+                                        Edit
+                                    </button>
+
+                                    <form
+                                        action="{{ url_for('delete_transaction', transaction_id=transaction.id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Delete this transaction?');">
+
+                                        <button class="delete" type="submit">
+                                            Delete
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="empty">
+                                No transactions yet. Add your first one!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<div class="panel">
+    <h3>AI Spending Insights</h3>
+
+    <div class="insights-container">
+        {% for insight in insights %}
+        <div class="insight-card">
+            <h4>{{ insight.title }}</h4>
+            <p>{{ insight.message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="insight-card">
+        <h4>Monthly Spending Percentage</h4>
+
+        {% if monthly_expenses > 0 %}
+            <p>
+                Your highest-spending category accounts for
+                <strong>{{ category_percentage }}%</strong>
+                of your monthly expenses.
+            </p>
+        {% else %}
+            <p>Add an expense to see your spending percentage.</p>
+        {% endif %}
+    </div>
+
+    <div class="insight-card">
+        <h4>Personalized Saving Suggestion</h4>
+        <p>{{ saving_suggestion }}</p>
+    </div>
+</div>
+
+
+    </section>
+</main>
+
+<!-- Edit Transaction Popup -->
+<div id="editModal">
+    <div class="modal-content">
+        <h3>Edit Transaction</h3>
+
+        <form id="editForm" method="POST">
+
+            <label for="editDescription">Description</label>
+            <input id="editDescription" name="description" required>
+
+            <label for="editAmount">Amount (₹)</label>
+            <input id="editAmount" name="amount" type="number"
+                   min="0.01" step="0.01" required>
+
+            <label for="editCategory">Category</label>
+            <input id="editCategory" name="category" required>
+
+            <label for="editDate">Date</label>
+            <input id="editDate" name="transaction_date"
+                   type="date" required>
+
+            <label for="editType">Type</label>
+            <select id="editType" name="transaction_type" required>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+
+            <div class="modal-buttons">
+                <button type="submit">Save Changes</button>
+                <button type="button" class="cancel-btn"
+                        onclick="closeEditForm()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Attach a click event to every Edit button.
+    document.querySelectorAll(".edit-btn").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const id = this.dataset.id;
+
+            document.getElementById("editForm").action = "/edit/" + id;
+            document.getElementById("editDescription").value = this.dataset.description;
+            document.getElementById("editAmount").value = this.dataset.amount;
+            document.getElementById("editCategory").value = this.dataset.category;
+            document.getElementById("editDate").value =
+                this.dataset.date.substring(0, 10);
+            document.getElementById("editType").value = this.dataset.type;
+
+            document.getElementById("editModal").style.display = "flex";
+        });
+    });
+
+    function closeEditForm() {
+        document.getElementById("editModal").style.display = "none";
+    }
+</script>
+
+
+<script>
+    const transactionSearch = document.getElementById("transactionSearch");
+    const typeFilter = document.getElementById("typeFilter");
+    const categoryFilter = document.getElementById("categoryFilter");
+
+    function filterTransactions() {
+        const searchText = transactionSearch.value.toLowerCase().trim();
+        const selectedType = typeFilter.value.toLowerCase();
+        const selectedCategory = categoryFilter.value.toLowerCase();
+
+        const rows = document.querySelectorAll(".table-wrap tbody tr");
+
+        rows.forEach(function(row) {
+            // Ignore the "No transactions yet" row.
+            if (row.cells.length < 6) {
+                return;
+            }
+
+            const description = row.cells[0].textContent.toLowerCase();
+            const category = row.cells[1].textContent.toLowerCase();
+            const type = row.cells[3].textContent.toLowerCase();
+
+            const matchesSearch = description.includes(searchText);
+            const matchesType =
+                selectedType === "all" || type === selectedType;
+            const matchesCategory =
+                selectedCategory === "all" || category === selectedCategory;
+
+            row.style.display =
+                matchesSearch && matchesType && matchesCategory ? "" : "none";
+        });
+    }
+
+    transactionSearch.addEventListener("input", filterTransactions);
+    typeFilter.addEventListener("change", filterTransactions);
+    categoryFilter.addEventListener("change", filterTransactions);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Expense Tracker - Reports</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 25px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #10172f, #171c3b 55%, #211d46);
+            color: #edf0ff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #b8c0df;
+            margin-top: 8px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 16px;
+            margin-left: 8px;
+            background: #625be7;
+            color: white;
+            text-decoration: none;
+            border-radius: 9px;
+            font-weight: 600;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .card, .chart-card {
+            background: linear-gradient(145deg, #202849, #191f3c);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            min-width: 0;
+        }
+
+        .card p {
+            color: #b8c0df;
+            margin-top: 0;
+        }
+
+        .card h2 {
+            margin-bottom: 0;
+        }
+
+        .income {
+            color: #42d6a0;
+        }
+
+        .expense {
+            color: #ff7887;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        @media (max-width: 750px) {
+            .summary, .charts {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Financial Reports</h1>
+            <p class="subtitle">Understand your income and spending.</p>
+        </div>
+
+        <div>
+            <a class="button" href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a class="button" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </header>
+
+    <section class="summary">
+        <div class="card">
+            <p>Total Income</p>
+            <h2 class="income">₹{{ "%.2f"|format(total_income) }}</h2>
+        </div>
+
+        <div class="card">
+            <p>Total Expenses</p>
+            <h2 class="expense">₹{{ "%.2f"|format(total_expenses) }}</h2>
+        </div>
+
+        <div class="card">
+            <p>Balance</p>
+            <h2>₹{{ "%.2f"|format(balance) }}</h2>
+        </div>
+    </section>
+
+    <section class="charts">
+        <div class="chart-card">
+            <h3>Expense Breakdown by Category (This Month)</h3>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <p id="categoryEmpty" style="display:none; color:#b8c0df;">
+                No expenses recorded for this month yet.
+            </p>
+        </div>
+
+        <div class="chart-card">
+            <h3>Monthly Income vs Expenses</h3>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+            <p id="monthlyEmpty" style="display:none; color:#b8c0df;">
+                No transactions recorded for this period yet.
+            </p>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    const categoryLabels = {{ category_labels | tojson }};
+    const categoryValues = {{ category_values | tojson }};
+    const monthLabels = {{ month_labels | tojson }};
+    const incomeValues = {{ income_values | tojson }};
+    const expenseValues = {{ expense_values | tojson }};
+
+    if (categoryValues.length > 0) {
+        new Chart(document.getElementById("categoryChart"), {
+            type: "doughnut",
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryValues
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: "#edf0ff" }
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById("categoryChart").style.display = "none";
+        document.getElementById("categoryEmpty").style.display = "block";
+    }
+
+    if (monthLabels.length > 0) {
+        new Chart(document.getElementById("monthlyChart"), {
+            type: "bar",
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: "Income (₹)",
+                        data: incomeValues
+                    },
+                    {
+                        label: "Expenses (₹)",
+                        data: expenseValues
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { color: "#edf0ff" },
+                        grid: { color: "rgba(255,255,255,0.08)" }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: "#edf0ff" },
+                        grid: { color: "rgba(255,255,255,0.08)" }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: "#edf0ff" }
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById("monthlyChart").style.display = "none";
+        document.getElementById("monthlyEmpty").style.display = "block";
+    }
+</script>
+
+
+<div class="section" style="margin-top: 25px;">
+    <h2>Monthly Spending Trend</h2>
+    <p>Compare your expenses across different months.</p>
+    <div style="width: 100%; height: 320px;">
+        <canvas id="monthlySpendingChart"></canvas>
+    </div>
+</div>
+
+
+<script>
+    fetch("{{ url_for('monthly_spending') }}")
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error("Could not load monthly spending");
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            const canvas = document.getElementById("monthlySpendingChart");
+
+            if (!canvas) {
+                return;
+            }
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Monthly Expenses (₹)",
+                        data: data.values,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Amount (₹)"
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Month"
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(function(error) {
+            console.error("Monthly spending chart error:", error);
+        });
+</script>
+
+
+</body>
+</html>
