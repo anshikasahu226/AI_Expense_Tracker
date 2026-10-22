@@ -1,0 +1,6 @@
+
+Flask
+Flask-Login
+mysql-connector-python
+python-dotenv
+gunicorn
